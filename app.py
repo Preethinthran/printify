@@ -134,5 +134,4 @@ def convert_to_pdf():
     return send_file(final_pdf_path, as_attachment=True, download_name="converted.pdf", mimetype="application/pdf")
 
 if __name__ == '__main__':
-    print("Flask is starting...")
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)
