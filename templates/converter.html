@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Image / Word to PDF Converter</h2>
+
+  <div class="alert alert-info mt-4">
+  <h5>📘 How to Use This Converter</h5>
+  <ul>
+    <li>✅ You can upload:
+      <ul>
+        <li>Image files: <code>.jpg</code>, <code>.jpeg</code>, <code>.png</code></li>
+        <li>Word documents: <code>.doc</code>, <code>.docx</code></li>
+        <li>Existing PDF files: <code>.pdf</code></li>
+      </ul>
+    </li>
+    <li>📌 You can select multiple files at once.</li>
+    <li>🔁 Files will be converted and merged into a single PDF in the <strong>order you select them</strong>.</li>
+    <li>📤 After conversion, your final PDF will be available for download automatically.</li>
+    <li>⚠️ If any file is not supported, it will be skipped.</li>
+  </ul>
+</div>
+
+  <form id="converterForm" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label for="file" class="form-label">Upload Image(s) or Word File</label>
+      <input type="file" class="form-control" id="file" name="files" multiple accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+    </div>
+    <button type="submit" class="btn btn-primary">Convert to PDF</button>
+  </form>
+
+  <div id="previewArea" class="mt-4"></div>
+  <div id="downloadArea" class="text-center mt-4"></div>
+</div>
+
+<script src="{{ url_for('static', filename='converter.js') }}"></script>
+{% endblock %}

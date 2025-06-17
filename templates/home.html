@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Hero Section -->
+<div class="text-center my-5">
+  <img src="{{ url_for('static', filename='home_background.svg') }}" class="img-fluid" style="max-height: 250px;" alt="Background Image">
+  <h1 class="mt-4">Welcome to <span class="text-primary">Printify</span></h1>
+  <p class="lead">Printify lets you easily generate beautiful certificates and convert files to PDF — all in one place!</p>
+</div>
+
+<!-- Main Features Section -->
+<div class="container my-5 text-center">
+  <h4 class="mb-4">🔧 Main Tools</h4>
+
+  <div class="row row-cols-1 row-cols-md-2 g-4 justify-content-center">
+
+    <div class="col">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">🎓 Certificate Generator</h5>
+          <p class="card-text">Create certificates using a template and a list of names. Perfect for events, workshops, or classes.</p>
+          <a href="/certificate" class="btn btn-primary mt-auto">Try Now</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">🖼️ PDF Converter</h5>
+          <p class="card-text">Convert images or Word documents to PDF. You can even merge multiple files into one!</p>
+          <a href="/converter" class="btn btn-success mt-auto">Try Now</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Additional Features Section -->
+<div class="container text-center mt-5">
+  <h4 class="mb-4">✨ Additional Features</h4>
+
+  <div class="row justify-content-center">
+    <div class="col-md-8 text-start">
+      <ul class="list-unstyled">
+        <li>📄 <strong>PDF Merger:</strong> Merge multiple PDFs into one final document.</li>
+        <li>💡 <strong>Simple Interface:</strong> User-friendly design for quick and easy use by students and professionals.</li>
+        <li>🚀 <strong>Fast & Lightweight:</strong> All processing happens in your browser or on the server — no login needed!</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

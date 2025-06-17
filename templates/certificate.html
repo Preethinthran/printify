@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+    <div class="alert alert-warning mt-4">
+  <h5>🧾 Instructions for Certificate Generation</h5>
+  <ul>
+    <li>📂 First, upload your certificate <strong>template image</strong> (preferably PNG or JPG format).</li>
+    <li>✍️ Enter one or more names:
+      <ul>
+        <li>Separate names with commas <code>(,)</code> or place each name on a new line.</li>
+      </ul>
+    </li>
+    <li>🎨 Choose the text font style, size, and color.</li>
+    <li>📍 Adjust the <strong>position (X, Y)</strong> where the name should appear on the certificate.</li>
+    <li>🖼️ The system will overlay each name onto the template and generate individual certificates.</li>
+    <li>📥 Finally, you can download all generated certificates as a <strong>single PDF file</strong>.</li>
+  </ul>
+</div>
+
+
+    <form
+      id="certificateForm"
+      method="POST"
+      enctype="multipart/form-data"
+      class="bg-white p-4 rounded shadow"
+    >
+      <div class="mb-3">
+        <label>Upload Certificate Template (image):</label><br />
+        <input
+          type="file"
+          name="template"
+          id="templateInput"
+          accept="image/*"
+          required
+        /><br /><br />
+      </div>
+
+      <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Select Font Style: </label><br />
+        <select name="font_style" id="fontStyle" class="form-select" required>
+          <option value="arial.ttf">Arial</option>
+          <option value="times.ttf">Times New Roman</option>
+          <option value="comic.ttf">Comic Sans</option>
+        </select>
+      </div>
+      <br /><br />
+
+      <div class="col-md-4 mb-3">
+      <label class="form-label">Select Font size: </label>
+      <select name="font_size" id="fontSize" class="form-select" required>
+        <option value="50">50</option>
+        <option value="60">60</option>
+        <option value="70">70</option>
+        <option value="80">80</option>
+        <option value="90">90</option>
+        <option value="100">100</option>
+        <option value="110">110</option>
+        <option value="120">120</option>
+        <option value="130">130</option>
+      </select>
+      </div><br /><br />
+
+      <div class="col-md-4 mb-3">
+      <label class="form-label">Select Font Color: </label>
+      <select name="font_color" id="fontColor" class="form-select" required>
+        <option value="black">Black</option>
+        <option value="blue">Blue</option>
+        <option value="red">Red</option>
+        <option value="green">Green</option>
+        <option value="white">White</option>
+      </select>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Click on the template to position the text: </label>
+      <div class="border p-2 rounded bg-light text-center">
+        <div class="text-center w-100 overflow-auto" style="max-width: 100%;">
+  <canvas id="previewCanvas" style="max-width: 100%; height: auto;"></canvas>
+</div>
+
+      </div>
+    </div>
+      
+
+    <div class="mb-3">
+      <label class="form-label">Enter Names (comma or newline separated): </label><br />
+      <textarea
+        name="names"
+        class="form-control"
+        rows="7"
+        cols="42"
+        placeholder="John Doe, unknown"
+        required
+      ></textarea>
+      </div>
+      
+
+      <input type="hidden" name="x_pos" id="x_pos" value="100" />
+      <input type="hidden" name="y_pos" id="y_pos" value="100" />
+      <input type="hidden" name="template_name" id="template_name" />
+
+      <div id="buttonWrapper" class="d-flex flex-wrap justify-content-center gap-2 mt-3 ">
+      <button type="submit" class="btn btn-primary" id="generateBtn">Generate Certificates</button>
+      </div>
+    </form>
+    <div id="previewArea" class="mt-4 text-center"></div>
+    </div>
+    <script>
+      const canvas = document.getElementById("previewCanvas");
+      const ctx = canvas.getContext("2d");
+      const templateInput = document.getElementById("templateInput");
+      const xInput = document.getElementById("x_pos");
+      const yInput = document.getElementById("y_pos");
+
+      const fontSizeSelect = document.getElementById("fontSize");
+      const fontColorSelect = document.getElementById("fontColor");
+      const fontStyleSelect = document.getElementById("fontStyle");
+
+      let image = new Image();
+      let scale = 0.5;
+      let currentX = 100;
+      let currentY = 100;
+
+      templateInput.addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+          alert("please upload a valid image file.");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("template", file);
+
+        fetch("/upload_template", {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              document.getElementById("template_name").value = data.filename;
+
+              image.onload = function () {
+                const maxCanvasWidth = 800;
+                const maxWidth = 2480;
+                const maxHeight = 3508;
+                if (image.width > maxWidth || image.height > maxHeight) {
+                  alert(
+                    "THe uploaded image is too large. Please use an A4-sized image(max: 2480 x 3508 px)"
+                  );
+                  return;
+                }
+
+                scale =
+                  image.width > maxCanvasWidth
+                    ? maxCanvasWidth / image.width
+                    : 1;
+
+                canvas.width = image.width * scale;
+                canvas.height = image.height * scale;
+                ctx.setTransform(scale, 0, 0, scale, 0, 0); // apply scale
+                ctx.drawImage(image, 0, 0);
+                drawPlaceholder(currentX, currentY);
+              };
+              image.src = `/static/uploads/${data.filename}`;
+            } else {
+              alert("Image upload failed");
+            }
+          })
+          .catch((err) => {
+            alert("Error Uploading image");
+            console.error(err);
+          });
+      });
+
+      function drawPlaceholder(x, y) {
+        currentX = x;
+        currentY = y;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        const color = fontColorSelect.value;
+        const size = fontSizeSelect.value;
+        const style = fontStyleSelect.value;
+
+        ctx.fillStyle = color;
+        const scaledFontSize = size * (canvas.width / image.width);
+        ctx.font = `${scaledFontSize}px ${getCanvasFontFamily(style)}`;
+        ctx.textBaseline = "top";
+        ctx.fillText("Your Name", x, y);
+
+        // Store values in form
+        const unscaledX = Math.round(x / (canvas.width / image.width));
+        const unscaledY = Math.round(y / (canvas.height / image.height));
+        xInput.value = unscaledX;
+        yInput.value = unscaledY;
+      }
+      function getCanvasFontFamily(fontFile) {
+        if (fontFile.includes("arial")) return "Arial";
+        if (fontFile.includes("times")) return "Times New Roman";
+        if (fontFile.includes("comic")) return "Comic Sans MS";
+        return "Arial";
+      }
+
+      canvas.addEventListener("click", function (e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+
+  drawPlaceholder(x, y);
+});
+
+
+      fontSizeSelect.addEventListener("change", () =>
+        drawPlaceholder(currentX, currentY)
+      );
+      fontColorSelect.addEventListener("change", () =>
+        drawPlaceholder(currentX, currentY)
+      );
+      fontStyleSelect.addEventListener("change", () =>
+        drawPlaceholder(currentX, currentY)
+      );
+
+      document
+        .getElementById("certificateForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const form = e.target;
+          const formData = new FormData(form);
+
+          fetch("/generate", {
+            method: "POST",
+            body: formData,
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success) {
+                const oldPreview = document.getElementById("previewContainer");
+                if (oldPreview) oldPreview.remove();
+
+                let oldBtn = document.getElementById("downloadPdfBtn");
+                if (oldBtn) oldBtn.remove();
+
+                const previewContainer = document.createElement("div");
+                previewContainer.id = "previewContainer";
+
+                data.images.forEach((url) => {
+                  const img = document.createElement("img");
+                  img.src = url;
+                  img.style.width = "400px";
+                  img.style.height = "auto";
+                  img.style.marginBottom = "10px";
+                  img.classList.add('img-thumbnail', 'm-2');
+                  previewContainer.appendChild(img);
+                });
+
+                const buttonWrapper = document.getElementById("buttonWrapper");
+                const oldDownloadBtn = document.getElementById("downloadPdfBtn");
+                if(oldDownloadBtn) oldDownloadBtn.remove();
+
+                const downloadBtn = document.createElement("button");
+                downloadBtn.id = "downloadPdfBtn";
+                downloadBtn.classList.add('btn','btn-success');
+                downloadBtn.innerText = "Download PDF";
+                
+
+                downloadBtn.onclick = () => {
+                  fetch("/download_pdf", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ images: data.images }),
+                  })
+                    .then((res) => res.blob())
+                    .then((blob) => {
+                      const link = document.createElement("a");
+                      link.href = URL.createObjectURL(blob);
+                      link.download = "certificates.pdf";
+                      link.click();
+                    });
+                };
+                
+                buttonWrapper.appendChild(downloadBtn);
+                document.body.appendChild(previewContainer);
+              } else {
+                alert("Certificate generation failed !");
+              }
+            })
+            .catch((err) => {
+              console.error("Error in generating certificates: ", err);
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
